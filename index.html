@@ -2,18 +2,88 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>say what</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/hchiam/css-boilerplate@6.0.0/style.css"
       integrity="sha384-thHsntRltFQFgrHgl7/avBhQ+uXkABJlP8wgGW62xGYYlLgaPGbEFQ0xdPcVDDI8"
       crossorigin="anonymous"
     />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      div {
+        position: relative;
+      }
+
+      div:has(input:focus):after {
+        content: 'hit "say" or hit Enter';
+        display: block;
+        position: absolute;
+        right: 0;
+      }
+
+      button,
+      input {
+        padding: 1rem;
+      }
+    </style>
+    <script>
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.register("service-worker.js");
+      }
+    </script>
+    <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/main.js"></script>
+    <div>
+      <button>say</button>
+      <input type="text" placeholder="what" autofocus />
+    </div>
+    <script>
+      const button = document.querySelector("button");
+      const input = document.querySelector("input");
+
+      button.addEventListener("click", () => {
+        if (input.value) {
+          say(input.value);
+        } else {
+          alert("First, type something to say.");
+        }
+      });
+
+      input.addEventListener("keypress", (event) => {
+        if (hitEnter(event)) {
+          if (input.value) {
+            say(input.value);
+          } else {
+            alert("First, type something to say.");
+          }
+        }
+      });
+
+      /** Based on: https://github.com/hchiam/learning-js/blob/main/bookmarklets/say.js */
+      function say(what, voiceLang, callback) {
+        const utterance = new SpeechSynthesisUtterance(what);
+        const voices = speechSynthesis.getVoices();
+        utterance.voice = voiceLang
+          ? voices.filter((v) => v.lang === voiceLang)[0]
+          : voices[0];
+        utterance.onend = callback;
+        speechSynthesis.speak(utterance);
+      }
+
+      function hitEnter(event) {
+        var key =
+          event.key || event.code || event.keyCode || event.which || event;
+        return key === "Enter" || key === "ENTER" || key === 13;
+      }
+    </script>
   </body>
 </html>
