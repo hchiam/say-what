@@ -26,12 +26,18 @@
         content: 'hit "say" or hit Enter';
         display: block;
         position: absolute;
-        right: 0;
+        left: 4rem;
+        bottom: -2rem;
       }
 
       button,
-      input {
+      input,
+      select {
         padding: 1rem;
+      }
+
+      select {
+        margin-block-start: 1rem;
       }
     </style>
     <script>
@@ -45,14 +51,18 @@
     <div>
       <button>say</button>
       <input type="text" placeholder="what" autofocus />
+      <select>
+        <option value="" disabled>with (select language) voice</option>
+      </select>
     </div>
     <script>
       const button = document.querySelector("button");
       const input = document.querySelector("input");
+      const select = document.querySelector("select");
 
       button.addEventListener("click", () => {
         if (input.value) {
-          say(input.value);
+          say(input.value, select.value);
         } else {
           alert("First, type something to say.");
         }
@@ -61,12 +71,21 @@
       input.addEventListener("keypress", (event) => {
         if (hitEnter(event)) {
           if (input.value) {
-            say(input.value);
+            say(input.value, select.value);
           } else {
             alert("First, type something to say.");
           }
         }
       });
+
+      const langs = speechSynthesis.getVoices().map((x) => x.lang);
+      for (const lang of langs) {
+        const option = document.createElement("option");
+        option.value = lang;
+        option.innerText = `with ${lang} voice`;
+        if (lang === "en-US") option.selected = true;
+        select.appendChild(option);
+      }
 
       /** Based on: https://github.com/hchiam/learning-js/blob/main/bookmarklets/say.js */
       function say(what, voiceLang, callback) {
