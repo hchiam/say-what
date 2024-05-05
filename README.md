@@ -12,4 +12,4 @@ yarn; yarn dev
 yarn deploy
 ```
 
-https://saywhat.surge.sh
+Installable PWA at: https://saywhat.surge.sh
