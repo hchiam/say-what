@@ -101,12 +101,29 @@
 
       function setUpLangs() {
         voices = speechSynthesis.getVoices();
-        const langs = voices.map((x) => x.lang);
+        const translator = new Intl.DisplayNames([navigator.language], {
+          type: "language",
+        });
+        const langs = [...new Set(voices.map((x) => x.lang))].sort((a, b) => {
+          let langA = a;
+          let langB = b;
+          try {
+            langA = translator.of(a.replace("_", "-"));
+          } catch (e) {}
+          try {
+            langB = translator.of(b.replace("_", "-"));
+          } catch (error) {}
+          return langA.localeCompare(langB);
+        });
         if (select.querySelectorAll("option").length === 1 && langs.length) {
           for (const lang of langs) {
             const option = document.createElement("option");
             option.value = lang;
-            option.innerText = `${lang} voice`;
+            let languageName = lang.replace("_", "-");
+            try {
+              languageName = translator.of(languageName);
+            } catch (e) {}
+            option.innerText = `${languageName} voice`;
             if (lang === "en-US" || lang === "en_US") option.selected = true;
             select.appendChild(option);
           }
