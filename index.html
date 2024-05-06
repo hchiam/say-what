@@ -30,6 +30,13 @@
         inset-block-start: -2rem;
       }
 
+      @media (hover: none) and (pointer: coarse) {
+        /* touchscreen */
+        div:has(input:focus):after {
+          content: 'hit "say"';
+        }
+      }
+
       button,
       input,
       select {
