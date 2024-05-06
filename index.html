@@ -26,8 +26,8 @@
         content: 'hit "say" or hit Enter';
         display: block;
         position: absolute;
-        left: 4rem;
-        bottom: -2rem;
+        inset-inline-start: 4rem;
+        inset-block-start: -2rem;
       }
 
       button,
@@ -36,8 +36,21 @@
         padding: 1rem;
       }
 
+      input {
+        border: 1px solid grey;
+        margin-block-end: 1rem;
+      }
+
       select {
-        margin-block-start: 1rem;
+        inline-size: 16ch;
+      }
+
+      span:has(> select) {
+        display: inline-block;
+      }
+
+      span:has(> select):before {
+        content: " with ";
       }
     </style>
     <script>
@@ -51,14 +64,17 @@
     <div>
       <button>say</button>
       <input type="text" placeholder="what" autofocus />
-      <select>
-        <option value="" disabled>with (select language) voice</option>
-      </select>
+      <span>
+        <select>
+          <option value="" disabled>(lang) voice</option>
+        </select>
+      </span>
     </div>
     <script>
       const button = document.querySelector("button");
       const input = document.querySelector("input");
       const select = document.querySelector("select");
+      let voices = [];
 
       button.addEventListener("click", () => {
         if (input.value) {
@@ -78,23 +94,38 @@
         }
       });
 
-      const langs = speechSynthesis.getVoices().map((x) => x.lang);
-      for (const lang of langs) {
-        const option = document.createElement("option");
-        option.value = lang;
-        option.innerText = `with ${lang} voice`;
-        if (lang === "en-US") option.selected = true;
-        select.appendChild(option);
+      setUpLangs();
+      speechSynthesis.addEventListener("voiceschanged", () => {
+        setUpLangs();
+      });
+
+      function setUpLangs() {
+        voices = speechSynthesis.getVoices();
+        const langs = voices.map((x) => x.lang);
+        if (langs.length) {
+          for (const lang of langs) {
+            const option = document.createElement("option");
+            option.value = lang;
+            option.innerText = `${lang} voice`;
+            if (lang === "en-US" || lang === "en_US") option.selected = true;
+            select.appendChild(option);
+          }
+        }
       }
 
       /** Based on: https://github.com/hchiam/learning-js/blob/main/bookmarklets/say.js */
       function say(what, voiceLang, callback) {
         const utterance = new SpeechSynthesisUtterance(what);
-        const voices = speechSynthesis.getVoices();
         utterance.voice = voiceLang
           ? voices.filter((v) => v.lang === voiceLang)[0]
           : voices[0];
         utterance.onend = callback;
+        if (utterance.voice?.voiceURI) {
+          utterance.voiceURI = utterance.voice.voiceURI;
+        }
+        if (utterance.voice?.lang) {
+          utterance.lang = utterance.voice.lang;
+        }
         speechSynthesis.speak(utterance);
       }
 
