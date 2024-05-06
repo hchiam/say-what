@@ -102,7 +102,7 @@
       function setUpLangs() {
         voices = speechSynthesis.getVoices();
         const langs = voices.map((x) => x.lang);
-        if (langs.length) {
+        if (select.querySelectorAll("option").length === 1 && langs.length) {
           for (const lang of langs) {
             const option = document.createElement("option");
             option.value = lang;
