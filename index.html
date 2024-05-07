@@ -85,7 +85,8 @@
 
       button.addEventListener("click", () => {
         if (input.value) {
-          say(input.value, select.value);
+          const index = select.value;
+          say(input.value, voices[index]);
         } else {
           alert("First, type something to say.");
           input.focus();
@@ -95,7 +96,8 @@
       input.addEventListener("keypress", (event) => {
         if (hitEnter(event)) {
           if (input.value) {
-            say(input.value, select.value);
+            const index = select.value;
+            say(input.value, voices[index]);
           } else {
             alert("First, type something to say.");
             input.focus();
@@ -113,26 +115,29 @@
         const translator = new Intl.DisplayNames([navigator.language], {
           type: "language",
         });
-        const langs = [...new Set(voices.map((x) => x.lang))].sort((a, b) => {
-          let langA = a;
-          let langB = b;
+        voices = voices.map((x) => {
           try {
-            langA = translator.of(a.replace("_", "-"));
-          } catch (e) {}
-          try {
-            langB = translator.of(b.replace("_", "-"));
-          } catch (error) {}
-          return langA.localeCompare(langB);
+            x.plainLanguageName = translator.of(x.lang.replace("_", "-"));
+          } catch (e) {
+            x.plainLanguageName = x.lang;
+          }
+          return x;
         });
-        if (select.querySelectorAll("option").length === 1 && langs.length) {
-          for (const lang of langs) {
+        voices.sort((a, b) => {
+          // return a.plainLanguageName.localeCompare(b.plainLanguageName);
+          return a.lang.localeCompare(b.lang);
+        });
+        if (select.querySelectorAll("option").length === 1 && voices.length) {
+          for (const index in voices) {
             const option = document.createElement("option");
-            option.value = lang;
+            option.value = index;
+            const lang = voices[index].lang;
             let languageName = lang.replace("_", "-");
             try {
               languageName = translator.of(languageName);
             } catch (e) {}
-            option.innerText = `${languageName} voice`;
+            const name = voices[index].name;
+            option.innerText = `${languageName} voice (${name})`;
             if (lang === "en-US" || lang === "en_US") option.selected = true;
             select.appendChild(option);
           }
@@ -142,15 +147,13 @@
       /** Based on: https://github.com/hchiam/learning-js/blob/main/bookmarklets/say.js */
       function say(what, voiceLang, callback) {
         const utterance = new SpeechSynthesisUtterance(what);
-        utterance.voice = voiceLang
-          ? voices.filter((v) => v.lang === voiceLang)[0]
-          : voices[0];
+        utterance.voice = voiceLang;
         utterance.onend = callback;
-        if (utterance.voice?.voiceURI) {
-          utterance.voiceURI = utterance.voice.voiceURI;
+        if (voiceLang.voiceURI) {
+          utterance.voiceURI = voiceLang.voiceURI;
         }
-        if (utterance.voice?.lang) {
-          utterance.lang = utterance.voice.lang;
+        if (voiceLang.lang) {
+          utterance.lang = voiceLang.lang;
         }
         speechSynthesis.speak(utterance);
       }
